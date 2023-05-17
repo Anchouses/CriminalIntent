@@ -11,6 +11,7 @@ val crimes = mutableListOf<Crime>()
             crime.title = "Crime #$i"
             crime.isSolved = i % 2 == 0
             crimes += crime
+            crime.requiresPolice = i % 3 == 0
         }
     }
 }

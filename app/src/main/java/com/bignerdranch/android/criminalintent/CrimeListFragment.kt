@@ -11,7 +11,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -44,13 +43,13 @@ class CrimeListFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         crimeListViewModel.crimeListLiveData.observe(
-            viewLifecycleOwner,
-            Observer { crime ->
-                crime?.let {
-                    Log.i(TAG, "Got crimes ${crime.size}")
-                    updateUI(crime)
-                }
-            })
+            viewLifecycleOwner
+        ) { crime ->
+            crime?.let {
+                Log.i(TAG, "Got crimes ${crime.size}")
+                updateUI(crime)
+            }
+        }
     }
 
     private fun updateUI(crimes: List<Crime>){

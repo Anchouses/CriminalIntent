@@ -6,18 +6,19 @@ import androidx.room.Room
 import com.bignerdranch.android.criminalintent.database.CrimeDatabase
 import java.util.*
 
-private const val DATA_NAME = "crime-database"
-
+const val DATABASE_NAME = "crime-database"   //data/data/com.bignerdranch.android.criminalintent/databases/crime-database
 class CrimeRepository private constructor(context: Context){   //синглтон (одноэлементный класс - в процессе приложения единовременно существует только один его класс)
 
     private val database: CrimeDatabase = Room.databaseBuilder(
         context.applicationContext,
         CrimeDatabase::class.java,
-        DATA_NAME
-    ).build()
+        DATABASE_NAME).build()
 
     private val crimeDao = database.crimeDao()
-
+//    init {
+//        val ass = database.openHelper.writableDatabase.path
+//        Log.d("aaaaaaa", ass.orEmpty())
+//    }
     fun getCrimes(): LiveData<List<Crime>> = crimeDao.getCrimes()
 
     fun getCrime(id: UUID): LiveData<Crime?> = crimeDao.getCrime(id)
@@ -27,8 +28,7 @@ class CrimeRepository private constructor(context: Context){   //синглто�
 
         fun initialize(context: Context){
             if (INSTANCE == null){
-                INSTANCE = CrimeRepository(context)
-            }
+                INSTANCE = CrimeRepository(context) }
         }
         fun get(): CrimeRepository {
             return INSTANCE ?:

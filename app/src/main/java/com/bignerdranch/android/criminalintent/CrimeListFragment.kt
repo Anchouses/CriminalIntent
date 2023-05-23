@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -14,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+
 
 private const val TAG = "CrimeListFragment"
 
@@ -57,17 +57,16 @@ class CrimeListFragment: Fragment() {
         crimeRecyclerView.adapter = adapter
     }
 
-    private abstract class CrimeHolder(view:View) : RecyclerView.ViewHolder(view) {
-        lateinit var crime: Crime
-        val titleTextView: TextView = itemView.findViewById(R.id.crime_title)
-        val dateTextView: TextView = itemView.findViewById(R.id.crime_date)
-    }
-    private inner class CrimeHolderUsual(view:View) :
-        View.OnClickListener, CrimeHolder(view) {  // inner - внутренний класс
+    private inner class CrimeHolder(view:View) : RecyclerView.ViewHolder(view), View.OnClickListener {
+        private lateinit var crime: Crime
+        private val titleTextView: TextView = itemView.findViewById(R.id.crime_title)
+        private val dateTextView: TextView = itemView.findViewById(R.id.crime_date)
         val solvedImageView: ImageView = itemView.findViewById(R.id.crime_solved)
+
         init {
             itemView.setOnClickListener(this)
         }
+
         fun bind(crime: Crime){
             this.crime = crime
             titleTextView.text = this.crime.title
@@ -79,54 +78,26 @@ class CrimeListFragment: Fragment() {
                 View.GONE
             }
         }
+
         override fun onClick(v: View?) {
             Toast.makeText(context, "${crime.title} pressed!", Toast.LENGTH_LONG)
                 .show()
         }
     }
 
-    private inner class CrimeHolderDangerous(view:View) : CrimeHolder(view) {  // inner - внутренний класс
-
-        val button: Button = view.findViewById(R.id.call_police)
-
-        fun bind(crime: Crime){
-            this.crime = crime
-            titleTextView.text = this.crime.title
-            dateTextView.text = DateFormat.format("EEEE, MMM dd yyyy", this.crime.date)
-            button.setOnClickListener{
-                Toast.makeText(context, "Police on the way!", Toast.LENGTH_LONG)
-                    .show()
-            }
-        }
-    }
-
     private inner class CrimeAdapter(var crimes: List<Crime>): RecyclerView.Adapter<CrimeHolder>(){
 
-        override fun getItemViewType(position: Int): Int {
-            val crime: Crime = crimes[position]
-            return when (crime.requiresPolice){
-                false -> 1
-                true -> 0
-            }
-        }
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CrimeHolder {
-            return when (viewType) {
-                1 -> {val view = layoutInflater.inflate(R.layout.list_item_crime, parent, false)
-                    CrimeHolderUsual(view)}
-                else -> {val view = layoutInflater.inflate(R.layout.list_item_crime_police, parent, false)
-                    CrimeHolderDangerous(view)}
-            }
+            val view = layoutInflater.inflate(R.layout.list_item_crime, parent, false)
+
+            return CrimeHolder(view)
         }
 
         override fun getItemCount(): Int = crimes.size
 
        override fun onBindViewHolder(holder: CrimeHolder, position: Int) {
            val crime = crimes[position]
-
-           when (holder){
-              is CrimeHolderUsual -> holder.bind(crime)
-               is CrimeHolderDangerous -> holder.bind(crime)
-           }
+           holder.bind(crime)
        }
 
     }

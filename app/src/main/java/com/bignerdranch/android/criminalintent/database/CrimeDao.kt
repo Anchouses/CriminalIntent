@@ -8,8 +8,8 @@ import java.util.*
 
 @Dao
 interface CrimeDao {
-    @Query("SELECT * FROM crime")   //почему с маленькой буквы?
+    @Query("SELECT * FROM Crime")   //почему с маленькой буквы?
     fun getCrimes(): LiveData<List<Crime>>
-    @Query("SELECT * FROM crime WHERE id=(:id)")
+    @Query("SELECT * FROM Crime WHERE id=(:id)")
     fun getCrime(id: UUID): LiveData<Crime?>
 }

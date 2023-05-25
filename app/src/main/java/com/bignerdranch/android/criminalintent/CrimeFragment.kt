@@ -75,7 +75,7 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
                                        start: Int,
                                        before: Int,
                                        count: Int) {
-                crime.title = sequence.toString()
+                crime.title = sequence.toString()  //sequence - последовательность
             }
 
             override fun afterTextChanged(sequence: Editable?) {
@@ -90,10 +90,18 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         }
     }
 
+    override fun onStop(){
+        super.onStop()
+        crimeDetailViewModel.saveCrime(crime)
+    }
     private fun updateUI(){
         titleField.setText(crime.title)
         dateButton.text = crime.date.toString()
-        solvedCheckBox.isChecked = crime.isSolved
+//        solvedCheckBox.isChecked = crime.isSolved
+        solvedCheckBox.apply {
+            isChecked = crime.isSolved
+            jumpDrawablesToCurrentState()
+        }
     }
     companion object{
         fun newInstance(crimeId: UUID): CrimeFragment{

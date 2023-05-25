@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.room.Room
 import com.bignerdranch.android.criminalintent.database.CrimeDatabase
 import java.util.*
+import java.util.concurrent.Executors
 
 const val DATABASE_NAME = "crime-database"   //data/data/com.bignerdranch.android.criminalintent/databases/crime-database
 class CrimeRepository private constructor(context: Context){   //синглтон (одноэлементный класс - в процессе приложения единовременно существует только один его класс)
@@ -15,10 +16,23 @@ class CrimeRepository private constructor(context: Context){   //синглто�
         DATABASE_NAME).build()
 
     private val crimeDao = database.crimeDao()
+    private val executor = Executors.newSingleThreadExecutor()  // Исполнитель, который ссылается на новый поток (thread - поток)
 
     fun getCrimes(): LiveData<List<Crime>> = crimeDao.getCrimes()
 
     fun getCrime(id: UUID): LiveData<Crime?> = crimeDao.getCrime(id)
+
+    fun updateCrime(crime: Crime){
+        executor.execute {                  // функция execute  принимает на выполнение блок кода
+            crimeDao.updateCrime(crime)
+        }
+    }
+
+    fun addCrime(crime: Crime){
+        executor.execute {
+            crimeDao.addCrime(crime)
+        }
+    }
 
     companion object{
         private var INSTANCE: CrimeRepository? = null

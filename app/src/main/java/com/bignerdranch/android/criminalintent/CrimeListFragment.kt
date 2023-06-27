@@ -24,7 +24,6 @@ class CrimeListFragment: Fragment() {
     /**
      * требуемый интерфейс
      */
-
     interface Callbacks{
         fun onCrimeSelected(crimeId: UUID)
     }
@@ -32,7 +31,7 @@ class CrimeListFragment: Fragment() {
     private lateinit var crimeRecyclerView: RecyclerView
     private var adapter: CrimeAdapter? = CrimeAdapter(emptyList())   //передаем в адаптер пустой лист в ожидании загрузки БД
 
-    override fun onAttach(context: Context) {
+    override fun onAttach(context: Context) {   //функция жизненного цикла Fragment - зачем ее переопределять (для установки и отмены свойства callbacks)
         super.onAttach(context)
         callbacks = context as Callbacks?
     }
@@ -47,11 +46,9 @@ class CrimeListFragment: Fragment() {
         savedInstanceState: Bundle?  //сохраненное состояние экземпляра
     ): View? {
         val view = inflater.inflate(R.layout.fragment_crime_list, container, false)   // (resource, root, attach to root)
-
         crimeRecyclerView = view.findViewById(R.id.crime_recycler_view) as RecyclerView
         crimeRecyclerView.layoutManager = LinearLayoutManager(context)
         crimeRecyclerView.adapter = adapter
-
         return view
     }
 
@@ -60,18 +57,18 @@ class CrimeListFragment: Fragment() {
         crimeListViewModel.crimeListLiveData.observe(   //используется для регистрации наблюдателя за экземпляром LiveData
             viewLifecycleOwner,       // определяет время жизни наблюдателя. Владелец жизненного цикла тут фрагмент, viewLifecycleOwner - его интерфейс
             Observer { crimes ->       // Observer -  объект, отвечающий за реакцию на новые данные LiveData - наблюдатель
-                crimes?.let {
+                crimes?.let {          // когда список преступлений готов, наблюдатель посылает список в updateUI для adapter
                     Log.i(TAG, "Got crimes ${crimes.size}")
                     updateUI(crimes)
                 }
             })
     }
 
-    override fun onDetach(){
+    override fun onDetach(){   //функция жизненного цикла Fragment
         super.onDetach()
         callbacks = null
     }
-    private fun updateUI(crimes: List<Crime>){
+    private fun updateUI(crimes: List<Crime>){   //
         adapter = CrimeAdapter(crimes)
         crimeRecyclerView.adapter = adapter
     }

@@ -1,5 +1,6 @@
 package com.bignerdranch.android.criminalintent
 
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -9,12 +10,15 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import java.util.*
 
 private const val TAG  = "CrimeFragment"
 private const val ARG_CRIME_ID = "crime_id"
+private const val DIALOG_DATE = "DialogDate"
+
 class CrimeFragment: Fragment() {
 
 private lateinit var crime: Crime
@@ -25,21 +29,21 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
     ViewModelProvider(this)[CrimeDetailViewModel::class.java]
 }
 
-
-    override fun onCreate(savedInstanceState: Bundle?) {
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    override fun onCreate(savedInstanceState: Bundle?) {  //настраиваем экземпляр фрагмента, но не заполняем представление
         super.onCreate(savedInstanceState)
         crime = Crime()
         val crimeId: UUID = arguments?.getSerializable(ARG_CRIME_ID) as UUID
         crimeDetailViewModel.loadCrime(crimeId)
     }
 
-    override fun onCreateView(
+    override fun onCreateView(   // заполняем представление фрагмента
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_crime, container, false)
-        titleField = view.findViewById(R.id.crime_title) as EditText
+        titleField = view.findViewById(R.id.crime_title)
         dateButton = view.findViewById(R.id.crime_date) as Button
         solvedCheckBox = view.findViewById(R.id.checkBox) as CheckBox
 
@@ -61,10 +65,10 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
                 }
             })
     }
-    override fun onStart() {
+    override fun onStart() {     // добавляем слушателя к EditText
         super.onStart()
         val titleWatcher = object: TextWatcher{
-            override fun beforeTextChanged(sequence: CharSequence?,
+            override fun beforeTextChanged(sequence: CharSequence?,   //sequence - последовательность, порядок
                                            start: Int,
                                            count: Int,
                                            after: Int) {
@@ -82,8 +86,8 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
                 //и это
             }
         }
-        titleField.addTextChangedListener(titleWatcher)
-        solvedCheckBox.apply {
+        titleField.addTextChangedListener(titleWatcher)   //Добавляем TextWatcher в список методов, которые вызываются при изменении текста TextView.
+        solvedCheckBox.apply {      //
             setOnCheckedChangeListener{_, isChecked ->
                 crime.isSolved = isChecked
             }
@@ -114,4 +118,3 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         }
     }
 }
-

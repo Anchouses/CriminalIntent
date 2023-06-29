@@ -4,6 +4,7 @@ import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,8 +19,9 @@ import java.util.*
 private const val TAG  = "CrimeFragment"
 private const val ARG_CRIME_ID = "crime_id"
 private const val DIALOG_DATE = "DialogDate"
+private const val REQUEST_DATE = 0
 
-class CrimeFragment: Fragment() {
+class CrimeFragment: Fragment(), DatePickerFragment.Callbacks {
 
 private lateinit var crime: Crime
 private lateinit var titleField: EditText
@@ -43,14 +45,11 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_crime, container, false)
+
         titleField = view.findViewById(R.id.crime_title)
         dateButton = view.findViewById(R.id.crime_date) as Button
         solvedCheckBox = view.findViewById(R.id.checkBox) as CheckBox
 
-        dateButton.apply {
-            text = crime.date.toString()
-            isEnabled = false
-        }
         return view
     }
 
@@ -92,15 +91,27 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
                 crime.isSolved = isChecked
             }
         }
+
+        dateButton.setOnClickListener {
+            DatePickerFragment.newInstance(crime.date).apply {
+                setTargetFragment(this@CrimeFragment, REQUEST_DATE)   //?????????
+                show(this@CrimeFragment.parentFragmentManager, DIALOG_DATE)
+            }
+        }
     }
 
     override fun onStop(){
         super.onStop()
         crimeDetailViewModel.saveCrime(crime)
     }
+
+    override fun onDateSelected(date: Date) {
+        crime.date = date
+        updateUI()
+    }
     private fun updateUI(){
         titleField.setText(crime.title)
-        dateButton.text = crime.date.toString()
+        dateButton.text = DateFormat.getLongDateFormat(context).format(this.crime.date) //crime.date.toString()   //DateFormat.getLongDateFormat(context).format(this.crime.date)
 //        solvedCheckBox.isChecked = crime.isSolved
         solvedCheckBox.apply {
             isChecked = crime.isSolved

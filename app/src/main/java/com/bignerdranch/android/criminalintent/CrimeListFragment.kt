@@ -27,6 +27,7 @@ class CrimeListFragment: Fragment() {
     }
     private var callbacks: Callbacks? = null
     private lateinit var crimeRecyclerView: RecyclerView
+//    private lateinit var addCrime: Button
     private var adapter: CrimeAdapter? = CrimeAdapter(emptyList())   //передаем в адаптер пустой лист в ожидании загрузки БД
 
     override fun onAttach(context: Context) {   //функция жизненного цикла Fragment - зачем ее переопределять (для установки и отмены свойства callbacks)
@@ -51,6 +52,7 @@ class CrimeListFragment: Fragment() {
         crimeRecyclerView = view.findViewById(R.id.crime_recycler_view) as RecyclerView
         crimeRecyclerView.layoutManager = LinearLayoutManager(context)
         crimeRecyclerView.adapter = adapter
+
         return view
     }
 
@@ -61,6 +63,8 @@ class CrimeListFragment: Fragment() {
             Observer { crimes ->       // Observer -  объект, отвечающий за реакцию на новые данные LiveData - наблюдатель
                 crimes?.let {          // когда список преступлений готов, наблюдатель посылает список в updateUI для adapter
                     Log.i(TAG, "Got crimes ${crimes.size}")
+//                    addCrime = view.findViewById(R.id.button)
+//                    if (crimes.isEmpty()) addCrime.isEnabled = true
                     updateUI(crimes)
                 }
             })

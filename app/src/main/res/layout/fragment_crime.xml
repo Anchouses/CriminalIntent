@@ -41,5 +41,17 @@
         android:text="@string/crime_solved_label"
         android:textColor="@color/black" />
 
+    <Button
+        android:id="@+id/choose_suspect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/choose_suspect" />
+
+    <Button
+        android:id="@+id/send_crime_report"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/send_crime_report" />
+
 
 </LinearLayout>

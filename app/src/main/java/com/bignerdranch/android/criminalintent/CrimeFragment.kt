@@ -2,6 +2,8 @@ package com.bignerdranch.android.criminalintent
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -125,6 +127,13 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
                 startActivityForResult(pickContactIntent, REQUEST_CONTACT)
             }
 
+            //pickContactIntent.addCategory(Intent.CATEGORY_HOME)  // дополнительная категория, которая предотвращает совпадения приложений адресной книги с интентом
+            val packageManager: PackageManager = requireActivity().packageManager   //PackageManager  знает все о компонентах, установленных на устройстве Андроид
+            val resolvedActivity: ResolveInfo? = packageManager.resolveActivity(pickContactIntent, PackageManager.MATCH_DEFAULT_ONLY)  //вызывая resolvedActivity даем ему команду найти  Activity, соответствующую интенту
+            if (resolvedActivity == null) {            //возвращается экземпляр ResolveInfo  с инфой об активити
+                isEnabled = false   // если поиск активити вернул результат null, то кнопка suspectButton блокируется
+            }
+
         }
     }
 
@@ -157,7 +166,7 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
             requestCode == REQUEST_CONTACT && data != null -> {
                 val contactUri: Uri? = data.data   // запрос всех отображаемых имен контактов
                 //
-                val queryFields = arrayOf(ContactsContract.Contacts.HAS_PHONE_NUMBER)   //массив контактов, (DISPLAY_NAME)
+                val queryFields = arrayOf(ContactsContract.Contacts.DISPLAY_NAME)   //массив контактов, (DISPLAY_NAME)
                 //
                 val cursor = contactUri?.let { requireActivity().contentResolver.query(it, queryFields, null, null, null) }
                 cursor?.use{  // проверяем, что курсор содержит хотя бы одну строку
@@ -200,7 +209,7 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
                 putSerializable(ARG_CRIME_ID, crimeId)
             }
             return CrimeFragment().apply {
-                arguments = args //dfkgpodfkgopakfp
+                arguments = args
             }
         }
     }

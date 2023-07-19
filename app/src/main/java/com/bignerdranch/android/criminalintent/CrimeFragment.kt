@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
+import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.format.DateFormat
@@ -17,16 +18,21 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ImageView
 import androidx.annotation.RequiresApi
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import java.io.File
 import java.util.*
 
-private const val TAG  = "CrimeFragment"
 private const val ARG_CRIME_ID = "crime_id"
 private const val DIALOG_DATE = "DialogDate"
 private const val REQUEST_DATE = 0
 private const val REQUEST_CONTACT = 1
+private const val REQUEST_PHOTO = 2
+private const val REQUEST_PHONE = 3
 private const val DATE_FORMAT = "EEE, MMM, dd"
 
 class CrimeFragment: Fragment(), DatePickerFragment.Callbacks {
@@ -37,6 +43,11 @@ private lateinit var dateButton: Button
 private lateinit var solvedCheckBox: CheckBox
 private lateinit var reportButton: Button
 private lateinit var suspectButton: Button
+private lateinit var callButton: Button
+private lateinit var photoButton: ImageButton
+private lateinit var photoView: ImageView
+private lateinit var photoFile: File   //
+private lateinit var photoUri: Uri
 private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
     ViewModelProvider(this)[CrimeDetailViewModel::class.java]
 }
@@ -61,6 +72,10 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         solvedCheckBox = view.findViewById(R.id.checkBox) as CheckBox
         reportButton = view.findViewById(R.id.send_crime_report) as Button
         suspectButton = view.findViewById(R.id.choose_suspect)
+        callButton = view.findViewById(R.id.call_suspect)
+        photoButton = view.findViewById(R.id.crime_camera) as ImageButton
+        photoView = view.findViewById(R.id.crime_photo) as ImageView
+
         return view
     }
 
@@ -71,9 +86,13 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
             androidx.lifecycle.Observer{ crime ->
                 crime?.let {
                     this.crime = crime
+                    photoFile = crimeDetailViewModel.getPhotoFile(crime)  //сохранение местонахождения файла фотографии
+                    photoUri = FileProvider.getUriForFile(requireActivity(), // FileProvider.getUriForFile преобразует локальный путь к файлу в URI, который видит приложение камеры
+                        "com.bignerdranch.android.criminalintent.fileprovider", photoFile)
                     updateUI()
                 }
-            })
+            }
+        )
     }
     override fun onStart() {     // добавляем слушателя к EditText
         super.onStart()
@@ -135,12 +154,62 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
             }
 
         }
+
+        callButton.setOnClickListener{
+//            Intent(Intent.ACTION_DIAL).apply {
+//                ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
+//                putExtra()
+//            }
+
+
+
+//                val packageManager: PackageManager = requireActivity().packageManager   //PackageManager  знает все о компонентах, установленных на устройстве Андроид
+//                val resolvedActivity: ResolveInfo? = packageManager.resolveActivity(newIntent, PackageManager.MATCH_DEFAULT_ONLY)  //вызывая resolvedActivity даем ему команду найти  Activity, соответствующую интенту
+//                if (resolvedActivity == null) {            //возвращается экземпляр ResolveInfo  с инфой об активити
+//                    isEnabled =
+//                        false   // если поиск активити вернул результат null, то кнопка suspectButton блокируется
+//                }
+
+
+        }
+
+        photoButton.apply {
+            val packageManager: PackageManager = requireActivity().packageManager  //создаем свойство packageManager
+
+            val captureImage = Intent(MediaStore.ACTION_IMAGE_CAPTURE)  // создаем  Intent для запуска Activity камеры и создания снимка
+            val resolvedActivity: ResolveInfo? = packageManager.resolveActivity(captureImage, PackageManager.MATCH_DEFAULT_ONLY) // MATCH_DEFAULT_ONLY - Флаг разрешения и запроса: если установлен, будут рассматриваться только фильтры, поддерживающие Intent.CATEGORY_DEFAULT
+            if (resolvedActivity == null) {
+                isEnabled = false
+            }
+
+            setOnClickListener {
+                captureImage.putExtra(MediaStore.EXTRA_OUTPUT, photoUri) //Добавить расширенные данные в объект Intent.
+
+                val cameraActivities: List<ResolveInfo> =
+                    packageManager.queryIntentActivities(captureImage, PackageManager.MATCH_DEFAULT_ONLY)   // список всех Activity, которые могут обрабатывать интент cameraImage
+
+                for (cameraActivity in cameraActivities) {
+                    requireActivity().grantUriPermission(cameraActivity.activityInfo.packageName, photoUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION) // FLAG_GRANT_WRITE_URI_PERMISSION флаг разрешение приложению камеры записывать photoUri
+                }
+
+                startActivityForResult(captureImage, REQUEST_PHOTO)
+            }
+        }
+
+        photoView.setOnClickListener{
+
+        }
     }
 
 
     override fun onStop(){
         super.onStop()
         crimeDetailViewModel.saveCrime(crime)
+    }
+
+    override fun onDetach(){
+        super.onDetach()
+        requireActivity().revokeUriPermission(photoUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION) //отзыв разрешения на запись у активити с камерой
     }
 
     override fun onDateSelected(date: Date) {
@@ -157,6 +226,17 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         }
         if (crime.suspect.isNotEmpty()){
             suspectButton.text = crime.suspect
+        }
+
+        updatePhotoView()
+    }
+
+    private fun updatePhotoView() {  //функция для обновления photoView
+        if (photoFile.exists()){   //если  photoFile существует
+            val bitmap = getScaledBitmap(photoFile.path, requireActivity())
+            photoView.setImageBitmap(bitmap)
+        } else {
+            photoView.setImageDrawable(null)
         }
     }
 
@@ -183,8 +263,15 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
                 }
 
             }
+
+            requestCode == REQUEST_PHOTO -> {
+                requireActivity().revokeUriPermission(photoUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION) //отзыв разрешения на запись у активити с камерой
+                updatePhotoView()
+            }
         }
     }
+
+
 
     private fun getCrimeReport(): String {
         val solvedString = if (crime.isSolved) {

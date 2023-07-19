@@ -5,7 +5,8 @@ import androidx.lifecycle.LiveData
 import androidx.room.Room
 import com.bignerdranch.android.criminalintent.database.CrimeDatabase
 import com.bignerdranch.android.criminalintent.database.mmigration_1_2
-import java.util.*
+import java.io.File
+import java.util.UUID
 import java.util.concurrent.Executors
 
 const val DATABASE_NAME = "crime-database"   //data/data/com.bignerdranch.android.criminalintent/databases/crime-database
@@ -19,6 +20,7 @@ class CrimeRepository private constructor(context: Context){   //синглто�
 
     private val crimeDao = database.crimeDao()
     private val executor = Executors.newSingleThreadExecutor()  // Исполнитель, который ссылается на новый поток (thread - поток)
+    private val filesDir = context.applicationContext.filesDir  //  filesDir - возвращает абсолютный путь к каталогу файловой системы, где хранятся файлы, созданные с помощью openFileOutput.
 
     fun getCrimes(): LiveData<List<Crime>> = crimeDao.getCrimes()
 
@@ -35,6 +37,8 @@ class CrimeRepository private constructor(context: Context){   //синглто�
             crimeDao.addCrime(crime)
         }
     }
+
+    fun getPhotoFile(crime: Crime): File = File(filesDir, crime.photoFileName)  //функция возвращает объкты File, указывающие на места хранения файлов в файловой системе
 
     companion object{
         private var INSTANCE: CrimeRepository? = null

@@ -25,6 +25,7 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import java.io.File
+import java.text.DateFormat.getDateInstance
 import java.util.*
 
 private const val ARG_CRIME_ID = "crime_id"
@@ -218,7 +219,7 @@ private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
     }
     private fun updateUI(){
         titleField.setText(crime.title)
-        dateButton.text = DateFormat.getLongDateFormat(context).format(this.crime.date) //crime.date.toString()   //DateFormat.getLongDateFormat(context).format(this.crime.date)
+        dateButton.text = getDateInstance().format(this.crime.date)//getLongDateFormat(context).format(this.crime.date) //crime.date.toString()   //DateFormat.getLongDateFormat(context).format(this.crime.date)
 //        solvedCheckBox.isChecked = crime.isSolved
         solvedCheckBox.apply {
             isChecked = crime.isSolved
